@@ -8,11 +8,13 @@ SQLAlchemy
   sqlalchemy.__version__ 
 ```
 * Connecting
-
-... For this tutorial we will use an in-memory-only SQLite database. To connect we use create_engine():
+...* For this tutorial we will use an in-memory-only SQLite database. To connect we use create_engine():
 ```python
   from sqlalchemy import create_engine
   engine = create_engine('sqlite:///:memory:', echo=True)
 ```
-* Declare a Mapping¶
+* Declare a Mapping
+```python
+from sqlalchemy.ext.declarative import declarative_base
 
+  Base = declarative_base()
