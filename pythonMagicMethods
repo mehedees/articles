@@ -1,4 +1,75 @@
+3##Construction and Initialization
+
 __new__(cls, [...)
 __new__ is the first method to get called in an object's instantiation. It takes the class, then any other arguments that it will pass along to __init__. __new__ is used fairly rarely, but it does have its purposes, particularly when subclassing an immutable type like a tuple or a string. I don't want to go in to too much detail on __new__ because it's not too useful, but it is covered in great detail in the Python docs.
+
 __init__(self, [...)
 The initializer for the class. It gets passed whatever the primary constructor was called with (so, for example, if we called x = SomeClass(10, 'foo'), __init__ would get passed 10 and 'foo' as arguments. __init__ is almost universally used in Python class definitions.
+
+__del__(self)
+If __new__ and __init__ formed the constructor of the object, __del__ is the destructor. It doesn't implement behavior for the statement del x (so that code would not translate to x.__del__()). Rather, it defines behavior for when an object is garbage collected. It can be quite useful for objects that might require extra cleanup upon deletion, like sockets or file objects. Be careful, however, as there is no guarantee that __del__ will be executed if the object is still alive when the interpreter exits, so __del__ can't serve as a replacement for good coding practices (like always closing a connection when you're done with it. In fact, __del__ should almost never be used because of the precarious circumstances under which it is called; use it with caution!
+
+Putting it all together, here's an example of __init__ and __del__ in action:
+
+from os.path import join
+
+class FileObject:
+    '''Wrapper for file objects to make sure the file gets closed on deletion.'''
+
+    def __init__(self, filepath='~', filename='sample.txt'):
+        # open a file filename in filepath in read and write mode
+        self.file = open(join(filepath, filename), 'r+')
+
+    def __del__(self):
+        self.file.close()
+        del self.file
+--------------------------------------------
+
+###Comparison magic methods
+
+__cmp__(self, other)
+__cmp__ is the most basic of the comparison magic methods. It actually implements behavior for all of the comparison operators (<, ==, !=, etc.), but it might not do it the way you want (for example, if whether one instance was equal to another were determined by one criterion and and whether an instance is greater than another were determined by something else). __cmp__ should return a negative integer if self < other, zero if self == other, and positive if self > other. It's usually best to define each comparison you need rather than define them all at once, but __cmp__ can be a good way to save repetition and improve clarity when you need all comparisons implemented with similar criteria.
+
+__eq__(self, other)
+Defines behavior for the equality operator, ==.
+
+__ne__(self, other)
+Defines behavior for the inequality operator, !=.
+
+__lt__(self, other)
+Defines behavior for the less-than operator, <.
+
+__gt__(self, other)
+Defines behavior for the greater-than operator, >.
+
+__le__(self, other)
+Defines behavior for the less-than-or-equal-to operator, <=.
+
+__ge__(self, other)
+Defines behavior for the greater-than-or-equal-to operator, >=.
+
+For an example, consider a class to model a word. We might want to compare words lexicographically (by the alphabet), which is the default comparison behavior for strings, but we also might want to do it based on some other criterion, like length or number of syllables. In this example, we'll compare by length. Here's an implementation:
+
+class Word(str):
+    '''Class for words, defining comparison based on word length.'''
+
+    def __new__(cls, word):
+        # Note that we have to use __new__. This is because str is an immutable
+        # type, so we have to initialize it early (at creation)
+        if ' ' in word:
+            print "Value contains spaces. Truncating to first space."
+            word = word[:word.index(' ')] # Word is now all chars before first space
+        return str.__new__(cls, word)
+
+    def __gt__(self, other):
+        return len(self) > len(other)
+    def __lt__(self, other):
+        return len(self) < len(other)
+    def __ge__(self, other):
+        return len(self) >= len(other)
+    def __le__(self, other):
+        return len(self) <= len(other)
+        
+-----------------------------------------
+
+
